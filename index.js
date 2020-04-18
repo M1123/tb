@@ -1,7 +1,7 @@
 'use strict';
 
-import { parse } from 'node-html-parser';
-const TB = require('node-telegram-bot-api')
+const HTMLParser = require('node-html-parser');
+const TB = require('node-telegram-bot-api');
 const token = '1263883084:AAGc2HmKWuABLlys4S-XUj6olaHo00JOOLQ';
 const bot = new TB(token, {
   polling: {
@@ -24,7 +24,7 @@ const fetch = url => new Promise((resolve, reject) => {
     res.setEncoding('utf8');
     const buffer = [];
     res.on('data', chunk => buffer.push(chunk));
-    res.on('end', () => resolve(parse(buffer.join())));
+    res.on('end', () => resolve(HTMLParser.parse(JSON.stringify(buffer.join()))));
   });
 });
 
