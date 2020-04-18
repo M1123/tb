@@ -24,7 +24,7 @@ const fetch = url => new Promise((resolve, reject) => {
     res.setEncoding('utf8');
     const buffer = [];
     res.on('data', chunk => buffer.push(chunk));
-    res.on('end', () => resolve(cheerio.load(JSON.stringify(buffer.join()))));
+    res.on('end', () => resolve(cheerio.load(buffer.join())));
   });
 });
 
@@ -34,9 +34,9 @@ bot.on('message', msg => {
   bot.sendMessage(msg.chat.id, `waiting...`);
   fetch('https://apteka.ru/catalog/varfarin-nikomed-0-0025-n50-tabl_5715d4dc3aad7/')
     .then($ => bot.sendMessage(msg.chat.id, `Варфарин Никомед - 50 таблеток - ${$('.price.m--mobile_font').text}р`))
-    .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
+    .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так(`));
   fetch('http://samlib.ru/t/tagern/')
     .then($ => bot.sendMessage(msg.chat.id, `${$('h3').text} - Последнее обновление - 
-    ${$('center').next().firstChild.firstChild.firstChild.firstChild.firstChild.text}`))
+    ${$('center').nextSibling.firstChild.firstChild.firstChild.firstChild.firstChild.text}`))
     .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
 });
