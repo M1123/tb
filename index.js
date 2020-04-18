@@ -36,7 +36,6 @@ bot.on('message', msg => {
     .then($ => bot.sendMessage(msg.chat.id, `Варфарин Никомед - 50 таблеток - ${$('.price.m--mobile_font').text}р`))
     .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так(`));
   fetch('http://samlib.ru/t/tagern/')
-    .then($ => bot.sendMessage(msg.chat.id, `${$('h3').text} - Последнее обновление - 
-    ${$('center').nextSibling.firstChild.firstChild.firstChild.firstChild.firstChild.text}`))
+    .then($ => bot.sendMessage(msg.chat.id, `${$('h3').text} - Последнее обновление///`))
     .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
 });
