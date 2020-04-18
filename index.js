@@ -28,8 +28,3 @@ bot.on('message', msg => {
     .then(body => bot.sendMessage(msg.chat.id, `res: ${body}, как-то так`))
     .catch(err => bot.sendMessage(msg.chat.id, `res: ${err}, как-то так`));
 });
-
-
-fetch('http://ietf.org/')
-  .then(body => console.log(body))
-  .catch(err => console.error(err));
