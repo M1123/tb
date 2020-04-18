@@ -21,12 +21,15 @@ const fetch = url => new Promise((resolve, reject) => {
 });
 
 // Usage
-
-
 bot.on('message', msg => {
   bot.sendMessage(msg.chat.id, `Hello, ${msg.from.first_name}`);
   bot.sendMessage(msg.chat.id, `waiting...`);
   fetch('http://samlib.ru/t/tagern/')
-    .then(body => bot.sendMessage(msg.chat.id, body))
-    .catch(err => bot.sendMessage(msg.chat.id, err));
+    .then(body => bot.sendMessage(msg.chat.id, `res: ${body}, как-то так`))
+    .catch(err => bot.sendMessage(msg.chat.id, `res: ${err}, как-то так`));
 });
+
+
+fetch('http://ietf.org/')
+  .then(body => console.log(body))
+  .catch(err => console.error(err));
