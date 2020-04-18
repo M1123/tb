@@ -2,7 +2,14 @@
 
 const TB = require('node-telegram-bot-api')
 const token = '1263883084:AAGc2HmKWuABLlys4S-XUj6olaHo00JOOLQ';
-const bot = new TB(token, {polling:true});
+const bot = new TB(token, {
+  polling: {
+      interval: 300,
+      autoStart: true,
+      params:{
+          timeout: 10
+      }
+  }});
 const http = require('http');
 const https = require('https');
 
@@ -25,6 +32,6 @@ bot.on('message', msg => {
   bot.sendMessage(msg.chat.id, `Hello, ${msg.from.first_name}`);
   bot.sendMessage(msg.chat.id, `waiting...`);
   fetch('http://samlib.ru/t/tagern/')
-    .then(body => bot.sendMessage(msg.chat.id, `res: ${body}, как-то так`))
+    .then(body => bot.sendMessage(msg.chat.id, `res: ${JSON.stringify(body).substr(-20)}, как-то так`))
     .catch(err => bot.sendMessage(msg.chat.id, `res: ${err}, как-то так`));
 });
