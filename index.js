@@ -24,7 +24,7 @@ const fetch = url => new Promise((resolve, reject) => {
     res.setEncoding('utf8');
     const buffer = [];
     res.on('data', chunk => buffer.push(chunk));
-    res.on('end', () => resolve(cheerio.load(buffer.join())));
+    res.on('end', () => resolve(cheerio.load(JSON.stringify(buffer.join()))));
   });
 });
 
