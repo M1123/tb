@@ -28,5 +28,5 @@ bot.on('message', msg => {
   bot.sendMessage(msg.chat.id, `waiting...`);
   fetch('http://samlib.ru/t/tagern/')
     .then(body => bot.sendMessage(msg.chat.id, body))
-    .catch(err => console.error(err));
+    .catch(err => bot.sendMessage(msg.chat.id, err));
 });
