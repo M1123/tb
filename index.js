@@ -1,5 +1,6 @@
 'use strict';
 
+import { parse } from 'node-html-parser';
 const TB = require('node-telegram-bot-api')
 const token = '1263883084:AAGc2HmKWuABLlys4S-XUj6olaHo00JOOLQ';
 const bot = new TB(token, {
@@ -23,7 +24,7 @@ const fetch = url => new Promise((resolve, reject) => {
     res.setEncoding('utf8');
     const buffer = [];
     res.on('data', chunk => buffer.push(chunk));
-    res.on('end', () => resolve(buffer.join()));
+    res.on('end', () => resolve(parse(buffer.join())));
   });
 });
 
@@ -32,6 +33,6 @@ bot.on('message', msg => {
   bot.sendMessage(msg.chat.id, `Hello, ${msg.from.first_name}`);
   bot.sendMessage(msg.chat.id, `waiting...`);
   fetch('http://samlib.ru/t/tagern/')
-    .then(body => bot.sendMessage(msg.chat.id, `res: ${JSON.stringify(body).substr(-20)}, как-то так`))
+    .then(body => bot.sendMessage(msg.chat.id, `res: ${body.querySelector('h3')}, как-то так`))
     .catch(err => bot.sendMessage(msg.chat.id, `res: ${err}, как-то так`));
 });
