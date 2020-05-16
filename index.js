@@ -12,10 +12,10 @@ const bot = new TB(TOKEN, {
   polling: true,
   request: {
     agentClass: Agent,
-    // agentOptions: {
-    //     socksHost: '127.0.0.1',
-    //     socksPort: '9150'
-    // }
+    agentOptions: {
+        socksHost: '127.0.0.1',
+        socksPort: '9150'
+    }
   }
 });
 
@@ -44,29 +44,54 @@ const fetch = url => new Promise((resolve, reject) => {
 //     .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
 // });
 
-bot.onText(/\/start/, (msg, [source,match]) => {
+//https://m1123.github.io/
+
+bot.onText(/\/(sl|сл)/, (msg, [source,match]) => {
   bot.sendMessage(msg.chat.id, `waiting...`);
   const {id} = msg.chat;
   bot.sendMessage(id,match);
   fetch('http://samlib.ru/t/tagern/')
-    .then($ => {bot.sendMessage(msg.chat.id, `${$('h3')} - Последнее обновление///`);console.log('$(h3): ', $('h3'))})
+    .then($ => {bot.sendMessage(msg.chat.id, $('h3')+' - Последнее обновление///');console.log('$(h3): ', $('h3'))})
     .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
 })
-bot.onText(/\/((П|п)огода|(W|w)eather)/, (msg, [source,match]) => {
+
+// ------------------ПОГОДА--------------------
+bot.onText(/(\/)?((П|п)огода|(W|w)eather)/, (msg, [source,match]) => {
+  let date = printDate();
   let pog = null;
-  let city = msg.text.slice(8);
-  console.log('city: ', city);
+  let city = msg.text.match(/([A-Za-zА-Яа-яёЁ-]+)$/)[0];
+
+  console.log( `user: ${msg.chat.first_name}, city: ${city}, date: ${date}`);
+  let output = 'Ошибка'
   weather.find({search: city, degreeType: 'C'}, function(err, result) {
-    if(err) console.log(err);
-    bot.sendMessage(msg.chat.id, `
-    Погода: 
-    ${city}: ${result[0].current.temperature} °С
-    ${translate(result[0].current.skytext)}
-    Ощущается как: ${result[0].current.feelslike} °С
-    Ветер: ${result[0].current.windspeed.slice(0,-5)} км/ч`);
+    console.log('result: ', result.length);
+    if (result.length) {
+      output = `Погода: 
+      ${city.trim()}: ${result[0].current.temperature} °С
+      ${translate(result[0].current.skytext)}
+      Ощущается как: ${result[0].current.feelslike} °С
+      Ветер: ${result[0].current.windspeed.slice(0,-5)} км/ч`;
+    } else {
+      output = `Город ${city} не найден.`;
+    }
+    bot.sendMessage(msg.chat.id, output);
+    bot.sendLocation(msg.chat.id, result[0].location.lat, result[0].location.long);
   });
 });
+function printDate() {
+  let temp = new Date();
+  let dateStr = padStr(temp.getFullYear()) +'-'+
+                padStr(1 + temp.getMonth()) +'-'+
+                padStr(temp.getDate()) +' '+
+                padStr(temp.getHours()) +':'+
+                padStr(temp.getMinutes()) +':'+
+                padStr(temp.getSeconds());
+  return dateStr;
+}
 
+function padStr(i) {
+  return (i < 10) ? "0" + i : "" + i;
+}
 let translate = (str) => {
   let result = '';
   for (let i = 0; i < skytextru.length; i++) {
@@ -76,7 +101,7 @@ let translate = (str) => {
       break;
     }
   }
-  return result;
+  return result||str;
 };
 const skytextru = [
   {en:'Thunderstorm', ru:'Гроза'},
@@ -90,16 +115,18 @@ const skytextru = [
   {en:'Dust', ru:'Пыль'},
   {en:'Fog', ru:'Туман'},
   {en:'Haze', ru:'Мгла'},
-  {en:'Windy', ru:'Ветреный'},
-  {en:'Cloudy', ru:'Облачный'},
+  {en:'Windy', ru:'Ветренно'},
+  {en:'Cloudy', ru:'Облачно'},
   {en:'Mostly Cloudy', ru:'В основном облачно'},
   {en:'Partly Cloudy', ru:'Частично облачно'},
-  {en:'Sunny', ru:'Солнечный'},
+  {en:'Sunny', ru:'Солнечно'},
   {en:'Mostly Sunny', ru:'Преимущественно солнечно'},
   {en:'Partly Sunny', ru:'Частично солнечно'},
   {en:'Hot', ru:'Жарко'},
   {en:'Chance Of Tstorm', ru:'Вероятность грозы'},
   {en:'Chance Of Rain', ru:'Вероятность дождя'},
   {en:'Chance Of Snow', ru:'Вероятность снега'},
+  {en:'Light Rain', ru:'Небольшой дождь'},
+  {en:'Rain Showers', ru:'Дождь'},
   {en:'na', ru:'Не доступно'},
 ];
