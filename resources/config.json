@@ -1,0 +1,7 @@
+{
+    "tokenTelegramBot":"1263883084:AAGc2HmKWuABLlys4S-XUj6olaHo00JOOLQ",
+    "agentOptions": {
+        "socksHost": "127.0.0.1",
+        "socksPort": "9150"
+    }
+}
