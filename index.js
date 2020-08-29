@@ -24,10 +24,10 @@ const skytextru = sk.skytext;
 
 const bot = new TB(TOKEN, {
   polling: true,
-  request: {
-    agentClass: Agent,
-    agentOptions: config.agentOptions,
-  }
+  // request: {
+  //   agentClass: Agent,
+  //   agentOptions: config.agentOptions,
+  // }
 });
 
 const fetchHtml = url => new Promise((resolve, reject) => {
