@@ -24,10 +24,10 @@ const skytextru = sk.skytext;
 
 const bot = new TB(TOKEN, {
   polling: true,
-  // request: {
-  //   agentClass: Agent,
-  //   agentOptions: config.agentOptions,
-  // }
+  request: {
+    agentClass: Agent,
+    agentOptions: config.agentOptions,
+  }
 });
 
 const fetchHtml = url => new Promise((resolve, reject) => {
@@ -55,27 +55,22 @@ const fetchHtml = url => new Promise((resolve, reject) => {
 //     .then($ => bot.sendMessage(msg.chat.id, `${$('h3')} - Последнее обновление///`))
 //     .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
 // });
-bot.onText(/\/(train)/, (msg, [source,match]) => {
-  bot.sendMessage(msg.chat.id, `waiting...`);
-  //  fetchHtml('https://apteka.ru/catalog/varfarin-nikomed-0-0025-n50-tabl_5715d4dc3aad7/')
-  //   .then($ => bot.sendMessage(msg.chat.id, `Варфарин Никомед - 50 таблеток - ${$('.price.m--mobile_font')}р`))
-  //   .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так(`));
-  fetchHtml('https://www.tutu.ru/rasp.php?st1=29404&st2=28604')
-    .then($ => {
-      console.log('success: ',$);
-      bot.sendMessage(msg.chat.id, `${$('timetable')} - `)})
-    .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
-});
 
 // https://m1123.github.io/
 
 bot.onText(/\/(sl|сл)/, (msg, [source,match]) => {
   bot.sendMessage(msg.chat.id, `waiting...`);
   const {id} = msg.chat;
-  bot.sendMessage(id,match);
-  fetchHtml('http://samlib.ru/t/tagern/')
-    .then($ => {bot.sendMessage(msg.chat.id, $('h3')+' - Последнее обновление///');console.log('$(h3): ', $('h3'))})
-    .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
+  // fetchHtml('http://samlib.ru/t/tagern/')
+  //   .then($ => {bot.sendMessage(msg.chat.id, $('h3')+' - Последнее обновление///');console.log('$(h3): ', $('h3'))})
+  //   .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
+  osmosis
+    .get('http://samlib.ru/t/tagern/')
+    .set({
+      'name': 'h3',
+      'upd': 'body table li[2]',
+    })
+    .data((data)=>{bot.sendMessage(id,`${data.name} - ${data.upd}`)})
 })
 
 
@@ -89,7 +84,6 @@ bot.onText(/(\/)?(test|тест)/, (msg, [source,match]) => {
 })
 
 // -----------------train---------------------
-
 const ROUTES = [
   {name:'Водники -> Москва:', url:'https://napoezde.net/raspisanie-poezdov-po-marshrutu/vodniki--moskva-savelovskiy-vokzal/'},
   {name:'Москва -> Водники:', url:'https://napoezde.net/raspisanie-poezdov-po-marshrutu/moskva-savelovskiy-vokzal--vodniki/'},
@@ -97,14 +91,9 @@ const ROUTES = [
 bot.onText(/(\/)?(мцд|d1)/, (msg, [source,match]) => {
   bot.sendMessage(msg.chat.id, `waiting...`);
   let text = msg.text.match(/\ (.+)$/);
-  // if (text!=null&&(text[1]=='last')) {};
-  console.log("text", text)
   let flag = (!!text) ? true : false
-  console.log("flag", flag)
   let url = (flag) ? ROUTES[0].url : ROUTES[1].url;
-  console.log("url", url)
   let title = (flag) ? ROUTES[0].name : ROUTES[1].name;
-  console.log("title", title)
   let result = 'Ошибка';
   osmosis
     .get(url)
@@ -140,18 +129,14 @@ function findNext(array) {
   for (let i = 0; i < array.length; i++) {
     let str = array[i];
     str = str.split(/\D/g).join('');
-    console.log("findNext -> str", str)
     if (str==''||str==null||Number(str)==NaN) continue;
     let num = Number(str);
-    console.log("num2-num", num2,'<',num,'->',num2<num)
-    if (num2<num){result = i;console.log('i',i); break};
+    if (num2<num){result = i; break};
   }
-  console.log("findNext -> result", result)
   return result;
 };
 
 function formatStr(str) {
-  // let result = str.split(' ').join('').split('\n').join('-')
   let result = str.split(' ')[0]
   return result
 }
