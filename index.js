@@ -1,7 +1,10 @@
 'use strict';
-
+// ----------------------fix------------------------
+process.env.NTBA_FIX_319 = 1;
 // ---------------------import----------------------
 const fs = require('fs');
+const dotenv = require('dotenv');
+require('dotenv').config()
 const cheerio = require('cheerio');
 const Agent = require('socks5-https-client/lib/Agent');
 const TB = require('node-telegram-bot-api');
@@ -18,16 +21,18 @@ const sk = require("./resources/skytexts.json");
 const { url } = require('inspector');
 // const users = require('./resources/users.json')
 // ----------------------const----------------------
-const TOKEN = config.tokenTelegramBot;
+const TOKEN = process.env.TOKEN;
 const skytextru = sk.skytext;
 // -------------------------------------------
+console.log('Bot is successfully started');
+let id = null
 
 const bot = new TB(TOKEN, {
   polling: true,
-  // request: {
-  //   agentClass: Agent,
-  //   agentOptions: config.agentOptions,
-  // }
+  request: {
+    agentClass: Agent,
+    agentOptions: config.agentOptions,
+  }
 });
 
 const fetchHtml = url => new Promise((resolve, reject) => {
@@ -39,31 +44,14 @@ const fetchHtml = url => new Promise((resolve, reject) => {
     }
     res.setEncoding('utf8');
     const buffer = [];
-    // res.on('data', chunk => buffer.push(chunk));
     res.on('end', () => resolve(buffer.join()));
-    // res.on('end', () => resolve(cheerio.load(JSON.stringify(buffer.join()))));
   });
 });
 
 
-// bot.on('message', msg => {
-//   bot.sendMessage(msg.chat.id, `waiting...`);
-    // fetchHtml('https://apteka.ru/catalog/varfarin-nikomed-0-0025-n50-tabl_5715d4dc3aad7/')
-    //   .then($ => bot.sendMessage(msg.chat.id, `Варфарин Никомед - 50 таблеток - ${$('.price.m--mobile_font')}р`))
-    //   .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так(`));
-//   fetchHtml('http://samlib.ru/t/tagern/')
-//     .then($ => bot.sendMessage(msg.chat.id, `${$('h3')} - Последнее обновление///`))
-//     .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
-// });
-
-// https://m1123.github.io/
-
-bot.onText(/\/(sl|сл)/, (msg, [source,match]) => {
-  bot.sendMessage(msg.chat.id, `waiting...`);
-  const {id} = msg.chat;
-  // fetchHtml('http://samlib.ru/t/tagern/')
-  //   .then($ => {bot.sendMessage(msg.chat.id, $('h3')+' - Последнее обновление///');console.log('$(h3): ', $('h3'))})
-  //   .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
+bot.onText(/\/(sl|сл)/, msg => {
+  id = msg.chat.id
+  bot.sendMessage(id, `waiting...`);
   osmosis
     .get('http://samlib.ru/t/tagern/')
     .set({
@@ -73,14 +61,39 @@ bot.onText(/\/(sl|сл)/, (msg, [source,match]) => {
     .data((data)=>{bot.sendMessage(id,`${data.name} - ${data.upd}`)})
 })
 
+let options = {
+  reply_markup: JSON.stringify({
+    inline_keyboard: [
+      [{ text: 'D1', callback_data: 'train' }],
+      [{ text: 'Weather', callback_data: 'weather' }],
+      [{ text: 'Кнопка 3', callback_data: 'text 3' }]
+    ]
+  })
+};
 
-bot.onText(/(\/)?(test|тест)/, (msg, [source,match]) => {
-  bot.sendMessage(msg.chat.id, `waiting...`);
-  const {id} = msg.chat;
+bot.onText(/\/start/, msg => {
+  id = msg.chat.id
+  bot.sendMessage(id, 'Выберите любую кнопку:', options);
+});
+
+bot.on('callback_query', async msg => {
+  let answer = msg.data
+  id = (msg.chat) ? msg.chat.id : msg.message.chat.id
+  if (id==null) return
+  switch (answer) {
+    case 'train': await train(true, id); await train(false, id); break;
+    case 'weather': await forecast('Москва', id); break;
+    default: console.log(answer);break;
+  }
+});
+
+bot.onText(/(\/)?(test|тест)/, msg => {
+  id = msg.chat.id
+  bot.sendMessage(id, `waiting...`);
   bot.sendMessage(id,match);
   fetchHtml('https://m1123.github.io/')
-    .then($ => {bot.sendMessage(msg.chat.id, $('footer')+' - sth');console.log('$(footer): ', $('footer'))})
-    .catch(err => bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`));
+    .then($ => {bot.sendMessage(id, $('footer')+' - sth');console.log('$(footer): ', $('footer'))})
+    .catch(err => bot.sendMessage(id, `ошибка: ${err}, как-то так`));
 })
 
 // -----------------train---------------------
@@ -88,10 +101,15 @@ const ROUTES = [
   {name:'Водники -> Москва:', url:'https://napoezde.net/raspisanie-poezdov-po-marshrutu/vodniki--moskva-savelovskiy-vokzal/'},
   {name:'Москва -> Водники:', url:'https://napoezde.net/raspisanie-poezdov-po-marshrutu/moskva-savelovskiy-vokzal--vodniki/'},
 ]
-bot.onText(/(\/)?(мцд|d1)/, (msg, [source,match]) => {
-  bot.sendMessage(msg.chat.id, `waiting...`);
+bot.onText(/(\/)?(мцд|d1|dd|Мцд|Мцд1|мцд1)/, async msg => {
+  id = msg.chat.id
+  bot.sendMessage(id, `waiting...`);
   let text = msg.text.match(/\ (.+)$/);
   let flag = (!!text) ? true : false
+  await train(flag, id)
+})
+
+function train(flag, id) {
   let url = (flag) ? ROUTES[0].url : ROUTES[1].url;
   let title = (flag) ? ROUTES[0].name : ROUTES[1].name;
   let result = 'Ошибка';
@@ -116,11 +134,9 @@ bot.onText(/(\/)?(мцд|d1)/, (msg, [source,match]) => {
 |-------|-------|
 | ${laststart} | ${lastfinish} |
 </pre>`;
-      bot.sendMessage(msg.chat.id,result,{ parse_mode: 'HTML' })
-    }) 
-
-    
-})
+      bot.sendMessage(id, result, { parse_mode: 'HTML' })
+    })
+}
 
 function findNext(array) {
   let result;
@@ -142,13 +158,19 @@ function formatStr(str) {
 }
 
 // ------------------ПОГОДА--------------------
-bot.onText(/(\/)?((П|п)огода|(W|w)eather)/, (msg, [source,match]) => {
-  // console.log('msg: ', msg);
+bot.onText(/(\/)?((П|п)огода|(W|w)eather)/, msg => {
+  id = msg.chat.id
   let date = printDate();
-  let city = msg.text.match(/\ (.+)$/)[1];
+  let city = 'Москва';
+  let matches = msg.text.match(/\ (.+)$/);
+  if (matches!=null && matches.length && matches[1]) city = matches[1];
   console.log( `user: ${msg.chat.first_name}, city: ${city}, date: ${date}`);
-  let output = 'Ошибка'
-  weather.find({search: city, degreeType: 'C'}, function(err, result) {
+  forecast(city, id)
+});
+
+let forecast = (city,id) => {
+  let output = 'Ошибка';
+  weather.find({search: city, degreeType: 'C'}, (err, result) => {
     try {  
       output = `Погода: 
       ${city.trim()}: ${result[0].current.temperature} °С
@@ -158,11 +180,10 @@ bot.onText(/(\/)?((П|п)огода|(W|w)eather)/, (msg, [source,match]) => {
     } catch {
       output = `Город ${city} не найден.`;
     }
-    bot.sendMessage(msg.chat.id, output);
-    if(result[0] && result[0].location) bot.sendLocation(msg.chat.id, result[0].location.lat, result[0].location.long);
-    // bot.sendLocation()
+    bot.sendMessage(id, output);
+    if(result[0] && result[0].location) bot.sendLocation(id, result[0].location.lat, result[0].location.long);
   });
-});
+}
 
 let translate = (str) => {
   let result = '';
@@ -192,13 +213,14 @@ function printDate(str) {
 }
 
 function padStr(i) {
-  return (i < 10) ? "0" + i : "" + i;
+  return ("0" + i).slice(-2);
 }
 
 // ---------------------RSS------------------------------
-bot.onText(/(\/)?(rss) (.+)/, (msg, [source,match]) => {
+bot.onText(/(\/)?(rss) (.+)/, msg => {
+  id = msg.chat.id
   let site = msg.text.match(/\ (.+)$/)[1];
-    bot.sendMessage(msg.chat.id, 'Посмотрим какие новости...');
+    bot.sendMessage(id, 'Посмотрим какие новости...');
   let feedparser = new FeedParser();
   let myJson = myJSON;
   let req = nodefetch(myJson[site].link)
@@ -210,87 +232,53 @@ bot.onText(/(\/)?(rss) (.+)/, (msg, [source,match]) => {
     else {res.body.pipe(feedparser)}
   }, function (err) {
     console.log('err: ', err);
-    bot.sendMessage(msg.chat.id, 'Я ничего не нашла(');
+    bot.sendMessage(id, 'Я ничего не нашла(');
   });
   feedparser.on('error', function (error) {
     console.log('error: ', error);
-    bot.sendMessage(msg.chat.id, 'Я ничего не нашла(');
+    bot.sendMessage(id, 'Я ничего не нашла(');
   });
   let i = 0;
   let output = 'Новости:';
   feedparser.on('readable', function () {
     let stream = this;
-    let meta = this.meta; // **NOTE** the "meta" is always available in the context of the feedparser instance
     let item;
-    let temp = new Date();
-
     while (item = stream.read()) {
       i ++;
       let date = new Date(item.pubDate)||new Date();
       if (date > myJson[site].date||i<6) {
-        output += `
-       [${date.getHours()}:${date.getMinutes()}] [${item.title}](${item.link})
+        output += `[${date.getHours()}:${date.getMinutes()}] [${item.title}](${item.link})
         `;
       }
     }
   })
   setTimeout(() => {
     bot.sendMessage(msg.chat.id, output, { parse_mode: 'Markdown', disable_web_page_preview: true });
-    console.log('output: ', output);
   }, 1000);
 });
 // ---------------------BASH-RSS-------------------------
-bot.onText(/(\/)?(bash|баш)/, (msg, [source,match]) => {
-  // console.log('msg: ', msg);
-  // let feedparser = new FeedParser();
-  // let req = nodefetch('https://bash.im/rss/')
-  // req.then(function (res) {
-  //   if (res.status !== 200) {throw new Error('Bad status code')}
-  //   else {res.body.pipe(feedparser)}
-  // }, function (err) {
-  //   console.log('err: ', err);
-  //   bot.sendMessage(msg.chat.id, 'Я ничего не нашла(');
-  // });
-  // feedparser.on('error', function (error) {
-  //   console.log('error: ', error);
-  //   bot.sendMessage(msg.chat.id, 'Я ничего не нашла(');
-  // });
-  // let i = 0;
-  // let output = 'Новости:';
-  // feedparser.on('readable', function () {
-  //   let stream = this;
-  //   let item;
-  //   // while (item = stream.read()) {
-  //     i ++;
-  //     // let date = new Date(item.pubDate)||new Date();
-  //     if (i===1) {
-  //       output = item.description.split('<br>').join('\n');
-  //       bot.sendMessage(msg.chat.id, output);
-  //     }
-  //   // }
-  // });
-
-  //quote__body
-  console.log('bash');
-  let link = 'https://bash.im/random';
-  fetch(link)
-    .then(response => {
-      console.log('response: ', response);
-      if (response.status !== 200) return;
-      return response.json();
+bot.onText(/(\/)?(bash|баш)/, msg => {
+  id = msg.chat.id
+  osmosis
+    .get('https://bash.im/quote/'+getRandomInt(462568))
+    // .get('https://bash.im/random')
+    .set({
+      'div': '.quote__body',
+      'title': 'title',
     })
-    .then(res => {
-      console.log('res:', res); 
-      bot.sendMessage(msg.chat.id, res);
-    })
-    .catch(err => {
-      console.error('Err:', err);
-      bot.sendMessage(msg.chat.id, `ошибка: ${err}, как-то так`);
+    .data((obj)=>{
+    console.log("obj", obj)
+      let text = obj.div.split('<br>').join('\n')
+      bot.sendMessage(id, text,{ parse_mode: 'HTML' });
     })
 });
-
+function getRandomInt(max) {
+  let result = Math.floor(Math.random() * Math.floor(max));
+  console.log("getRandomInt -> result", result);
+  return result;
+}
 // ---------------------TRANSLATE------------------------
-bot.onText(/\/((T|t)|(П|п))/, (msg, [source,match]) => {
+bot.onText(/\/((T|t)|(П|п))/, msg => {
   let text = msg.text.match(/\ (.+)$/)[1];
   let link = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&dt=t&dt=bd&dj=1&text=${text}&tl=en`
   const {id} = msg.chat;
