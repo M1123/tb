@@ -16,7 +16,7 @@
     "dotenv": "^8.2.0",
     "feedparser": "^2.2.10",
     "fs": "0.0.1-security",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.7",
     "node-telegram-bot-api": "^0.40.0",
     "osmosis": "^1.1.10",
     "socks5-https-client": "^1.2.1",
