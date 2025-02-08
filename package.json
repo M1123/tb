@@ -1,28 +1,31 @@
 {
-  "name": "tel_bot",
+  "name": "tb",
   "version": "1.0.0",
-  "description": "bot",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "nodemon index.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --env-file=.env index.js",
+    "dev": "nodemon --env-file=.env index.js",
+    "watch": "nodemon --env-file=.env index.js"
   },
-  "engines": {
-    "node": "10.16.0"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/M1123/tb.git"
   },
+  "keywords": [],
   "author": "",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/M1123/tb/issues"
+  },
+  "homepage": "https://github.com/M1123/tb#readme",
+  "description": "",
   "dependencies": {
-    "cheerio": "^1.0.0-rc.3",
-    "dotenv": "^8.2.0",
-    "feedparser": "^2.2.10",
-    "fs": "0.0.1-security",
-    "node-fetch": "^2.6.0",
-    "node-telegram-bot-api": "^0.40.0",
-    "osmosis": "^1.1.10",
-    "socks5-https-client": "^1.2.1",
-    "weather-js": "^2.0.0"
+    "dotenv": "^16.4.7",
+    "node-telegram-bot-api": "0.66.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.3"
+    "nodemon": "^3.1.9"
   }
 }
